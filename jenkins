@@ -1,0 +1,73 @@
+
+
+Install and Configure Jenkins on Amazon AMI (Part II)
+Mohan Pawar
+Mohan Pawar
+
+Jan 19, 2018·5 min read
+
+
+Jenkins Installation on Amazon EC2 Instance
+Update: This article is part of a Jenkins series. Check out the full series: Part 1, Part 2, Part 3, Part 4
+This is a Part II of Jenkins series as in Part I we went through an introduction to Jenkins and what is CI server. In this post we’ll go through an installing and configuring Jenkins on Amazon AMI running centos 7. Here, are the steps you can follow to install the Jenkins CI server on Amazon AMI,
+Step 1: Set up Prerequisites (make sure you have jdk 1.8 or more).
+AWS account, AWS Identity and Access Management(IAM) user name and password, an Amazon EC2 key pair, and a configured Virtual Private Cloud(VPC). Setting up to Host a Web App on AWS
+Step 2: Launch an EC2 Instance.
+In this step you will launch a virtual server to host Jenkins. These virtual instances are called EC2 instances. This is also called as Amazon Machine Image(AMI).
+You will complete the following tasks:
+Create a Security Group for Your Amazon EC2 Instance
+Launch your EC2 Instance
+Step 3 : Install and Configure Jenkins
+In this step you will deploy Jenkins on your EC2 instance by completing the following tasks:
+Connect to Your Linux Instance
+Download and Install Jenkins
+Configure Jenkins
+Before doing the steps make sure you have java1.8 rather then default java1.7 ship with Amazon AMI. If you could see the 1.7 version you can uninstall and install the 1.8 using following commands,
+[ec2-user ~]$ sudo yum remove java-1.7.0-openjdk
+[ec2-user ~]$ sudo yum install java-1.8.0
+Download and Install Jenkins
+1. To ensure that your software packages are up to date on your instance, use the following command to perform a quick software update:
+[ec2-user ~]$ sudo yum update –y
+2. Add the Jenkins repo using the following command:
+[ec2-user ~]$ sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+3. Import a key file from Jenkins-CI to enable installation from the package:
+[ec2-user ~]$ sudo rpm — import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key
+4. Install Jenkins:
+[ec2-user ~]$ sudo yum install jenkins -y
+5. Start Jenkins as a service.
+Note : Before running the Jenkins, make sure your 8080 port is available or else you could run Jenkins on any other available port by simply changing the port inside the configuration file of CentOS rpm based linux i.e. /etc/sysconfig/jenkins file(The location in debian based linux is /var/default/jenkins), change the port as JENKINS_PORT=”8081”
+[ec2-user ~]$ sudo service jenkins start
+To start the jenkins service at boot-up, you can run,
+[ec2-user ~]$ chkconfig jenkins on
+or
+[ec2-user ~]$ systemctl start jenkins.service
+[ec2-user ~]$ systemctl enable jenkins.service
+Then, finally you could be able to visit your server IP or public DNS at the above port to get the jenkins dashboard by making sure that the port is open i.e. you added the inbould rule for that port on your AMI server. As, in my case the port is 8081, I’ll visit the following address, http://server-ip-address:8081/ You can see the below screen as you visited above URL,
+
+Getting Started Jenkins Page
+Then you could visit the directory path shown in above image and get the initial password to proceed with the installation.
+[ec2-user ~]$ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+and paste it in the above image.
+
+Jenkins Suggested Plug-in’s Installation
+Here your installation steps completed and you can start configuring and managing the Jenkins CI server as per your requirement. Automate the task for your workflow. You can see the “Welcome to Jenkins!” message on the home page as shown below.
+
+Jenkins Dashboard home page
+Configure Jenkins with build servers. You can configure Jenkins so that it spins up additional Amazon EC2 instances as build servers, based on resource consumption. You can install the respective plug-in’s based on your project and tools requirements. Also, set different users in a team and configure the access permissions based on their individual role in a project.
+Change the Workspace directory of Jenkins
+The default workspace directory of jenkins in CentOS is “/var/lib/jenkins” and you can change it to any location you want on your server. You can cd into this directory and see all the logs, jobs, plug-in’s, configuration files, secret key, updates, libraries, etc. are present there. As your project requirement, you might need to change the home directory. Another reason for changing the home directory is you want to align the space with other projects workspace. So, here is the simple steps with which you can do this, Check your current home jenkins home directory(/var/lib/jenkins) and create a new folder which will become the new jenkins home directory. Your current home directory can be seen in jenkins dashbaord as,
+
+Jenkins Home Directory
+Copy all data from old directory to newly created one.
+Change environment variable -JENKINS_HOME and set to new directory. Better to append this in your $PATH variable or add it into .bash_profile file/ as,
+export JENKINS_HOME = /new-directory-path
+Restart jenkins service and check the home directory is changed in the above image.
+[ec2-user ~]$ sudo service jenkins restart
+Add Jenkins To The Sudoers
+It’s not a best practice to assign jenkins user sudo permission. But, in some cases you may require to restart the server, build and run your script which needs sudo permission to access particular directory, etc. In that cases, you can assign the jenkins user sudo permissions as following,
+i) Open the sudoers configuration file in your favorite editor, in /etc/sudoers
+[ec2-user ~]$ sudo vim /etc/sudoers
+ii) Add/Modify jenkins users. Modify the jenkins users line as below if it’s present or else you can simply add the following line as,
+jenkins ALL=(ALL) NOPASSWD: ALL
+Finally save your file and you are done. Now you could able to execute the build jobs which require sudo permissions.
+Now you are ready to create a job for your build. We’ll see in the next blog how to create your first jenkins jobs. You can create a new job and configure a system to build, automate the respective task and achieved the Continuous Integration(CI) and Continuous Delivery(CD) using jenkins.
